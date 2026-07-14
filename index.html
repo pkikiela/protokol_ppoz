@@ -39,7 +39,7 @@ body{
   -webkit-font-smoothing:antialiased;
 }
 
-.app{ max-width:1040px; margin:0 auto; padding:28px 20px 80px; }
+.app{ max-width:1220px; margin:0 auto; padding:28px 20px 80px; }
 
 /* ---------- Topbar ---------- */
 .topbar{
@@ -174,10 +174,33 @@ table.grid tfoot td{ background:#fff; border-right:none; }
 .tab-btn.active{ color:var(--navy); border-bottom-color:var(--navy); }
 
 /* ---------- Status badges ---------- */
-.badge{ display:inline-flex; align-items:center; gap:5px; border-radius:999px; padding:4px 11px; font-size:11.5px; font-weight:700; letter-spacing:.01em; }
+.badge{ display:inline-flex; align-items:center; gap:6px; border-radius:999px; padding:7px 16px; font-size:13px; font-weight:800; letter-spacing:.02em; }
 .badge-open{ background:var(--warn-tint); color:var(--warn); }
 .badge-done{ background:var(--ok-tint); color:var(--ok); }
 .badge-neutral{ background:#EDEFF1; color:#556; }
+.badge-danger{ background:var(--danger-tint); color:var(--danger); }
+
+table.registry tr[data-status="open"] td{ background:#FFFAF2; }
+table.registry tr[data-status="done"] td{ background:#F3FBF5; }
+table.registry tr[data-status="open"]:hover td{ background:#FFF3E0; }
+table.registry tr[data-status="done"]:hover td{ background:#E9F7ED; }
+table.registry td:nth-child(5){ min-width:150px; }
+
+/* ---------- Reminders panel ---------- */
+.reminders-panel{
+  background:#fff; border:1px solid #F0D9A8; border-left:4px solid var(--warn);
+  border-radius:10px; padding:16px 18px; margin-bottom:20px;
+}
+.reminders-panel-head{ font-weight:700; font-size:14px; color:var(--navy-dark); margin-bottom:12px; }
+.reminder-card{
+  display:flex; align-items:center; justify-content:space-between; gap:14px;
+  padding:10px 0; border-top:1px solid var(--border);
+}
+.reminder-card:first-of-type{ border-top:none; padding-top:0; }
+.reminder-main{ flex:1; min-width:0; }
+.reminder-title{ font-weight:600; font-size:13.5px; color:var(--text); margin-top:4px; }
+.reminder-sub{ font-size:12px; color:var(--muted); margin-top:2px; }
+.reminder-noemail{ font-size:12px; color:var(--muted); font-style:italic; white-space:nowrap; }
 
 /* ---------- Registry ---------- */
 .registry-toolbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:12px; flex-wrap:wrap; }
@@ -389,6 +412,9 @@ table.doc-table tr.row-neutral td{ background:#EDEFF1; }
   .doc-meta{ flex-direction:column; gap:4px; }
 
   .btn{ min-height:40px; }
+
+  .reminder-card{ flex-direction:column; align-items:stretch; gap:8px; }
+  .reminder-card .btn{ width:100%; justify-content:center; }
 }
 
 @media screen and (max-width:400px){
@@ -542,12 +568,21 @@ table.doc-table tr.row-neutral td{ background:#EDEFF1; }
       <div class="section-head"><span class="num">IV</span><h2>Stwierdzone usterki i zalecenia</h2></div>
       <div class="section-body">
         <p class="section-hint">Dla każdej usterki podaj zalecane działanie, termin realizacji i osobę odpowiedzialną.</p>
+
+        <div class="field full" style="margin-bottom:16px;">
+          <label>Podstawa prawna zaleceń</label>
+          <select id="podstawaGlobalnaSel">
+            <option value="DEFAULT">Dz.U.2023.822 t.j. – Rozporządzenie MSWiA z 07.06.2010 ws. ochrony przeciwpożarowej budynków (wersja od 23.12.2024)</option>
+            <option value="__inne__">Inna (wpisz ręcznie)</option>
+          </select>
+          <input type="text" id="podstawaGlobalna" placeholder="wpisz podstawę prawną" style="margin-top:8px; display:none;">
+        </div>
         <div class="table-wrap">
           <table class="grid">
             <thead>
               <tr>
                 <th style="width:34px;">Lp.</th><th>Opis usterki</th><th>Lokalizacja</th><th>Zalecane działanie</th>
-                <th>Podstawa prawna</th><th>Termin</th><th>Odpowiedzialny</th><th>Status</th><th></th>
+                <th>Termin</th><th>Odpowiedzialny</th><th>Email odpowiedzialnego</th><th>Status</th><th></th>
               </tr>
             </thead>
             <tbody id="defectBody"></tbody>
@@ -675,6 +710,7 @@ const STATUS_OPTIONS = ["OK", "usterka", "nie wykonano", "nie dotyczy"];
 const UWAGI_OPTIONS = ["Ocena wizualna", "Nie dotyczy", "Inne"];
 const DEFECT_STATUS_OPTIONS = ["otwarte", "w trakcie", "zrealizowane"];
 const STORAGE_KEY = "ppoz_protocols_v1";
+const PODSTAWA_DEFAULT = "Dz.U.2023.822 t.j. – Rozporządzenie Ministra Spraw Wewnętrznych i Administracji z dnia 7 czerwca 2010 r. w sprawie ochrony przeciwpożarowej budynków, innych obiektów budowlanych i terenów (wersja od 23 grudnia 2024 r.)";
 
 const PERSONNEL_LIST = [
   "Antoniak Piotr", "Antoniak-Buć Jolanta", "Bazanowski Kamil", "Berej Sabina",
@@ -801,6 +837,7 @@ document.addEventListener("DOMContentLoaded", () => {
   wireOswiadczenie();
   wireNazwaObiektu();
   wireTypCentrali();
+  wirePodstawaGlobalna();
   inspectionPhotos.wire();
 
   document.getElementById("btnAddDefect").addEventListener("click", () => addDefectRow());
@@ -957,9 +994,9 @@ function addDefectRow(initial) {
     opis: initial?.opis || "",
     lokalizacja: initial?.lokalizacja || "",
     dzialanie: initial?.dzialanie || "",
-    podstawa: initial?.podstawa || "",
     termin: initial?.termin || "",
     odpowiedzialny: initial?.odpowiedzialny || "",
+    email: initial?.email || "",
     status: initial?.status || "otwarte",
   });
   renderDefectTable();
@@ -980,7 +1017,6 @@ function renderDefectTable() {
       <td><input type="text" data-d="opis" placeholder="opis nieprawidłowości"></td>
       <td><input type="text" data-d="lokalizacja" placeholder="strefa, element"></td>
       <td><input type="text" data-d="dzialanie" placeholder="zalecane działanie"></td>
-      <td><input type="text" data-d="podstawa" placeholder="podstawa prawna / norma"></td>
       <td><input type="date" data-d="termin"></td>
       <td>
         <select data-odp-sel="${row.id}">
@@ -990,6 +1026,7 @@ function renderDefectTable() {
         </select>
         <input type="text" data-odp-txt="${row.id}" placeholder="wpisz osobę" style="display:none; margin-top:6px;">
       </td>
+      <td><input type="email" data-d="email" placeholder="np. jan.kowalski@inglot.pl"></td>
       <td>
         <select data-d="status">
           ${DEFECT_STATUS_OPTIONS.map(s => `<option value="${s}">${s}</option>`).join("")}
@@ -1021,10 +1058,18 @@ function renderDefectTable() {
       odpTxt.value = row.odpowiedzialny;
     }
     const syncOdp = () => { row.odpowiedzialny = odpSel.value === "__inne__" ? odpTxt.value : odpSel.value; };
+    const emailInput = tr.querySelector('[data-d="email"]');
     odpSel.addEventListener("change", () => {
       odpTxt.style.display = odpSel.value === "__inne__" ? "block" : "none";
       if (odpSel.value !== "__inne__") odpTxt.value = "";
       syncOdp();
+      if (odpSel.value && odpSel.value !== "__inne__") {
+        const autoEmail = buildInglotEmail(odpSel.value);
+        if (autoEmail) {
+          emailInput.value = autoEmail;
+          row.email = autoEmail;
+        }
+      }
     });
     odpTxt.addEventListener("input", syncOdp);
   });
@@ -1067,6 +1112,25 @@ function wireTypCentrali() {
 }
 
 /* ==========================================================
+   IV. Podstawa prawna zaleceń — pole globalne
+   ========================================================== */
+function wirePodstawaGlobalna() {
+  const sel = document.getElementById("podstawaGlobalnaSel");
+  const txt = document.getElementById("podstawaGlobalna");
+  txt.value = PODSTAWA_DEFAULT;
+  sel.addEventListener("change", () => {
+    if (sel.value === "__inne__") {
+      txt.style.display = "block";
+      txt.value = "";
+      txt.focus();
+    } else {
+      txt.style.display = "none";
+      txt.value = PODSTAWA_DEFAULT;
+    }
+  });
+}
+
+/* ==========================================================
    VI. Oświadczenie — pokaż pole tekstowe dla ograniczeń
    ========================================================== */
 function wireOswiadczenie() {
@@ -1082,6 +1146,30 @@ function wireOswiadczenie() {
 
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+/* ==========================================================
+   Automatyczne generowanie e-maila z listy osób (Nazwisko Imię)
+   ========================================================== */
+function stripDiacritics(s) {
+  const map = {
+    ą: "a", ć: "c", ę: "e", ł: "l", ń: "n", ó: "o", ś: "s", ź: "z", ż: "z",
+    Ą: "a", Ć: "c", Ę: "e", Ł: "l", Ń: "n", Ó: "o", Ś: "s", Ź: "z", Ż: "z",
+  };
+  return s.split("").map(ch => map[ch] || ch).join("");
+}
+
+function buildInglotEmail(personnelEntry) {
+  const cleaned = personnelEntry.replace(/\s*\(.*?\)\s*/g, "").trim();
+  const parts = cleaned.split(/\s+/);
+  if (parts.length < 2) return "";
+  const imie = parts[parts.length - 1];
+  const nazwiskoFull = parts.slice(0, parts.length - 1).join(" ");
+  const nazwiskoFirstPart = nazwiskoFull.split("-")[0];
+  const first = stripDiacritics(imie.charAt(0).toLowerCase());
+  const surnamePart = stripDiacritics(nazwiskoFirstPart.toLowerCase()).replace(/[^a-z]/g, "");
+  if (!first || !surnamePart) return "";
+  return `${first}${surnamePart}@inglot.pl`;
 }
 
 /* ==========================================================
@@ -1112,6 +1200,28 @@ function fmtDateTime(dtInput) {
   return `${d}.${m}.${y}, ${h}:${min}`;
 }
 
+/* ==========================================================
+   Nazwa pliku PDF — DUŻE LITERY, wg numeru protokołu
+   ========================================================== */
+function buildFileTitle(protokolNr, dateIso, suffix) {
+  const numMatch = /^(\d+)/.exec((protokolNr || "").trim());
+  const num = numMatch ? numMatch[1] : "000";
+  const year = dateIso ? String(dateIso).slice(0, 4) : String(new Date().getFullYear());
+  return `${num} BHP ${year} ${suffix}`.toUpperCase();
+}
+
+function printWithTitle(title) {
+  const prevTitle = document.title;
+  document.title = title;
+  const restore = () => {
+    document.title = prevTitle;
+    window.removeEventListener("afterprint", restore);
+  };
+  window.addEventListener("afterprint", restore);
+  window.print();
+  setTimeout(restore, 3000);
+}
+
 function generateProtocol() {
   const errors = validate();
   const box = document.getElementById("validationBox");
@@ -1137,6 +1247,7 @@ function generateProtocol() {
     zmiany: val("zmiany"),
     zakres,
     defects: defectRows,
+    podstawaPrawna: val("podstawaGlobalna") || PODSTAWA_DEFAULT,
     naprawy: val("naprawy"),
     oswiadczenie,
     oswiadczenieOpis: val("oswiadczenieOpis"),
@@ -1193,11 +1304,10 @@ function renderDoc(d, opts = {}) {
       <td>${escapeHtml(x.opis) || "—"}</td>
       <td>${escapeHtml(x.lokalizacja) || "—"}</td>
       <td>${escapeHtml(x.dzialanie) || "—"}</td>
-      <td>${escapeHtml(x.podstawa) || "—"}</td>
       <td>${fmtDate(x.termin)}</td>
       <td>${escapeHtml(x.odpowiedzialny) || "—"}</td>
       <td>${x.status}</td>
-    </tr>`).join("") : `<tr><td colspan="8" style="text-align:center;color:#777;">Nie stwierdzono usterek.</td></tr>`;
+    </tr>`).join("") : `<tr><td colspan="7" style="text-align:center;color:#777;">Nie stwierdzono usterek.</td></tr>`;
 
   const photosHtml = d.photos.length ? `
     <div class="doc-photo-grid">
@@ -1253,22 +1363,25 @@ function renderDoc(d, opts = {}) {
 
       <div class="doc-section-title">IV. Stwierdzone usterki i zalecenia</div>
       <table class="doc-table">
-        <thead><tr><th>Lp.</th><th>Opis usterki</th><th>Lokalizacja</th><th>Zalecane działanie</th><th>Podstawa prawna</th><th>Termin</th><th>Odpowiedzialny</th><th>Status</th></tr></thead>
+        <thead><tr><th>Lp.</th><th>Opis usterki</th><th>Lokalizacja</th><th>Zalecane działanie</th><th>Termin</th><th>Odpowiedzialny</th><th>Status</th></tr></thead>
         <tbody>${defectRowsHtml}</tbody>
       </table>
 
-      <div class="doc-section-title">V. Wykonane naprawy i konserwacje podczas przeglądu</div>
+      <div class="doc-section-title">V. Podstawa prawna zaleceń</div>
+      <div class="doc-field">${escapeHtml(d.podstawaPrawna) || "—"}</div>
+
+      <div class="doc-section-title">VI. Wykonane naprawy i konserwacje podczas przeglądu</div>
       <div class="doc-field">${escapeHtml(d.naprawy) || "……………………………………………………………………………………………"}</div>
 
-      <div class="doc-section-title">VI. Oświadczenie o stanie systemu / ograniczeniach</div>
+      <div class="doc-section-title">VII. Oświadczenie o stanie systemu / ograniczeniach</div>
       <div class="doc-checkbox-line">☑ ${oswiadczenieLabel(d.oswiadczenie)}</div>
       ${d.oswiadczenie === "ograniczenia" ? `<div class="doc-field"><b>Opis ograniczeń:</b> ${escapeHtml(d.ograniczeniaOpis) || "—"}</div>` : ""}
       ${d.oswiadczenieOpis ? `<div class="doc-field"><b>Opis / uwagi:</b> ${escapeHtml(d.oswiadczenieOpis)}</div>` : ""}
 
-      <div class="doc-section-title">VII. Załączniki – zdjęcia z kontroli</div>
+      <div class="doc-section-title">VIII. Załączniki – zdjęcia z kontroli</div>
       ${photosHtml}
 
-      <div class="doc-section-title">VIII. Podpisy</div>
+      <div class="doc-section-title">IX. Podpisy</div>
       <div class="doc-signrow-labels">
         <div>Opracował</div>
         <div>Zatwierdził</div>
@@ -1297,7 +1410,9 @@ function renderDoc(d, opts = {}) {
   document.getElementById("rtBack").addEventListener("click", () => {
     showView(mode === "new" ? "formView" : "registryView");
   });
-  document.getElementById("rtPrint").addEventListener("click", () => window.print());
+  document.getElementById("rtPrint").addEventListener("click", () => {
+    printWithTitle(buildFileTitle(d.protokolNr, d.dataKontroli, "PROTOKÓŁ Z KONTROLI P.POŻ"));
+  });
   if (mode === "new") {
     document.getElementById("rtNew").addEventListener("click", () => {
       if (confirm("Rozpocząć nowy, pusty protokół? Bieżące dane zostaną utracone.")) {
@@ -1309,6 +1424,92 @@ function renderDoc(d, opts = {}) {
 }
 
 /* ==========================================================
+   Panel przypomnień o terminach realizacji zaleceń
+   ========================================================== */
+function daysUntil(iso) {
+  if (!iso) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(iso + "T00:00:00");
+  if (isNaN(target.getTime())) return null;
+  return Math.round((target - today) / 86400000);
+}
+
+function reminderLabel(days) {
+  if (days < 0) return `Po terminie (${Math.abs(days)} ${Math.abs(days) === 1 ? "dzień" : "dni"})`;
+  if (days === 0) return "Termin dziś";
+  if (days === 1) return "Termin jutro";
+  return `Za ${days} dni`;
+}
+
+function reminderClass(days) {
+  return days < 0 ? "badge-danger" : "badge-open";
+}
+
+function collectReminders() {
+  const list = loadRegistry();
+  const reminders = [];
+  list.forEach(r => {
+    (r.defects || []).forEach(d => {
+      if (d.status === "zrealizowane") return;
+      const days = daysUntil(d.termin);
+      if (days === null || days > 7) return;
+      reminders.push({
+        recordId: r.id,
+        protokolNr: r.protokolNr,
+        obiekt: r.nazwaObiektu,
+        opis: d.opis,
+        termin: d.termin,
+        odpowiedzialny: d.odpowiedzialny,
+        email: (d.email || "").trim(),
+        days,
+      });
+    });
+  });
+  reminders.sort((a, b) => a.days - b.days);
+  return reminders;
+}
+
+function buildMailto(r) {
+  const subject = `Przypomnienie: termin realizacji zalecenia ppoż. – protokół ${r.protokolNr}`;
+  const body = [
+    "Dzień dobry,",
+    "",
+    "przypominam o zbliżającym się terminie realizacji zalecenia z kontroli ochrony przeciwpożarowej:",
+    "",
+    `Obiekt: ${r.obiekt}`,
+    `Protokół nr: ${r.protokolNr}`,
+    `Zalecenie: ${r.opis}`,
+    `Termin realizacji: ${fmtDate(r.termin)}`,
+    "",
+    "Proszę o informację zwrotną odnośnie postępu realizacji.",
+  ].join("\n");
+  return `mailto:${r.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
+function renderRemindersPanel() {
+  const reminders = collectReminders();
+  if (!reminders.length) return "";
+  const cards = reminders.map(r => `
+    <div class="reminder-card">
+      <div class="reminder-main">
+        <span class="badge ${reminderClass(r.days)}">${reminderLabel(r.days)}</span>
+        <div class="reminder-title">${escapeHtml(r.opis) || "Zalecenie"} <span style="color:var(--muted); font-weight:400;">— ${escapeHtml(r.obiekt)}</span></div>
+        <div class="reminder-sub">Protokół ${escapeHtml(r.protokolNr)} · Termin: ${fmtDate(r.termin)} · Odpowiedzialny: ${escapeHtml(r.odpowiedzialny) || "—"}</div>
+      </div>
+      ${r.email ? `<a class="btn btn-add" href="${buildMailto(r)}">✉️ Wyślij przypomnienie</a>` : `<span class="reminder-noemail">Brak e-maila — dodaj go w edycji zalecenia</span>`}
+    </div>
+  `).join("");
+
+  return `
+    <div class="reminders-panel">
+      <div class="reminders-panel-head">🔔 Przypomnienia o terminach realizacji (do 7 dni lub po terminie)</div>
+      ${cards}
+    </div>
+  `;
+}
+
+/* ==========================================================
    Spis kontroli (rejestr)
    ========================================================== */
 function renderRegistryView() {
@@ -1316,6 +1517,7 @@ function renderRegistryView() {
   const list = loadRegistry();
 
   el.innerHTML = `
+    ${renderRemindersPanel()}
     <div class="registry-toolbar">
       <h2>Spis kontroli</h2>
       <div class="registry-search">
@@ -1669,7 +1871,9 @@ function renderComparisonDoc(record, rk) {
   `;
 
   document.getElementById("cmpBack").addEventListener("click", () => showView("registryView"));
-  document.getElementById("cmpPrint").addEventListener("click", () => window.print());
+  document.getElementById("cmpPrint").addEventListener("click", () => {
+    printWithTitle(buildFileTitle(record.protokolNr, rk.data, "RAPORT PORÓWNAWCZY Z REKONTROLI"));
+  });
 }
 
 </script>
