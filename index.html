@@ -1,0 +1,1677 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Protokół z kontroli p.poż</title>
+<style>
+:root{
+  --navy:#1F3B57;
+  --navy-dark:#132534;
+  --navy-tint:#EAF0F5;
+  --accent:#B24A3C;
+  --bg:#F4F6F8;
+  --paper:#FFFFFF;
+  --border:#D7DEE5;
+  --border-strong:#B9C4CE;
+  --text:#20262B;
+  --muted:#657080;
+  --ok:#2E7D46;
+  --ok-tint:#E9F5EC;
+  --warn:#9C6B00;
+  --warn-tint:#FBF1DC;
+  --danger:#B24A3C;
+  --danger-tint:#FBEBE8;
+  --radius:10px;
+  --font-ui: "Segoe UI", Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-doc: "Georgia", "Iowan Old Style", "Times New Roman", serif;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+
+*{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; }
+*{ -webkit-print-color-adjust:exact; print-color-adjust:exact; color-adjust:exact; }
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-ui);
+  line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+}
+
+.app{ max-width:1040px; margin:0 auto; padding:28px 20px 80px; }
+
+/* ---------- Topbar ---------- */
+.topbar{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:16px; margin-bottom:28px;
+}
+.topbar .brand{ display:flex; flex-direction:column; gap:2px; }
+.topbar .brand .eyebrow{
+  font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--muted); font-weight:600;
+}
+.topbar .brand h1{
+  margin:0; font-size:22px; font-weight:700; color:var(--navy-dark);
+}
+.status-pill{
+  display:inline-flex; align-items:center; gap:6px;
+  background:var(--navy-tint); color:var(--navy);
+  border:1px solid #CBD9E4; border-radius:999px;
+  padding:6px 14px; font-size:12.5px; font-weight:600;
+}
+.status-pill .dot{ width:7px; height:7px; border-radius:50%; background:var(--navy); }
+
+/* ---------- Sections / cards ---------- */
+.section{
+  background:var(--paper);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  margin-bottom:20px;
+  overflow:hidden;
+  box-shadow:0 1px 2px rgba(20,40,60,.04);
+}
+.section-head{
+  display:flex; align-items:baseline; gap:10px;
+  background:var(--navy);
+  color:#fff;
+  padding:13px 18px;
+}
+.section-head .num{
+  font-family:var(--font-mono);
+  font-size:12px; opacity:.75; letter-spacing:.05em;
+}
+.section-head h2{ margin:0; font-size:15px; font-weight:600; letter-spacing:.01em; }
+.section-body{ padding:18px; }
+.section-hint{
+  font-size:12.5px; color:var(--muted); font-style:italic; margin:-4px 0 14px;
+}
+
+.field-grid{
+  display:grid; grid-template-columns:repeat(2,1fr); gap:14px 18px;
+}
+.field{ display:flex; flex-direction:column; gap:6px; }
+.field.full{ grid-column:1 / -1; }
+.field label{
+  font-size:12.5px; font-weight:600; color:var(--navy-dark);
+}
+.field label .req{ color:var(--accent); }
+.field input[type=text],
+.field input[type=date],
+.field input[type=datetime-local],
+.field textarea,
+.field select{
+  border:1px solid var(--border-strong);
+  border-radius:7px;
+  padding:9px 11px;
+  font-size:14px;
+  font-family:inherit;
+  color:var(--text);
+  background:#fff;
+  width:100%;
+}
+.field textarea{ min-height:64px; resize:vertical; }
+.field input:focus, .field textarea:focus, .field select:focus{
+  outline:2px solid #9FC0DA; outline-offset:1px; border-color:var(--navy);
+}
+
+/* ---------- Tables ---------- */
+.table-wrap{ overflow-x:auto; }
+table.grid{
+  width:100%; border-collapse:collapse; font-size:13px;
+}
+table.grid th{
+  background:var(--navy);
+  color:#fff;
+  text-align:left;
+  font-size:12px;
+  font-weight:600;
+  padding:9px 10px;
+  white-space:nowrap;
+}
+table.grid td{
+  border-bottom:1px solid var(--border);
+  border-right:1px solid var(--border);
+  padding:7px 8px;
+  vertical-align:top;
+}
+table.grid td:last-child, table.grid th:last-child{ border-right:none; }
+table.grid tr:nth-child(even) td{ background:#FBFCFD; }
+table.grid tr.row-ok td{ background:var(--ok-tint) !important; }
+table.grid tr.row-bad td{ background:var(--danger-tint) !important; }
+table.grid tr.row-neutral td{ background:#EDEFF1 !important; }
+table.grid td input[type=text],
+table.grid td input[type=date],
+table.grid td select{
+  border:1px solid var(--border);
+  border-radius:5px;
+  padding:6px 7px;
+  font-size:13px;
+  width:100%;
+  font-family:inherit;
+}
+table.grid td.lp{ text-align:center; color:var(--muted); font-family:var(--font-mono); width:34px; }
+table.grid td.element-name{ font-size:13px; font-weight:500; min-width:210px; }
+table.grid tfoot td{ background:#fff; border-right:none; }
+
+.row-actions{ display:flex; justify-content:flex-end; padding:10px 4px 0; }
+.icon-btn-row{ display:flex; gap:6px; justify-content:center; }
+.icon-btn{
+  border:1px solid var(--border-strong); background:#fff; border-radius:6px;
+  width:26px; height:26px; cursor:pointer; font-size:14px; line-height:1;
+  color:var(--muted); display:flex; align-items:center; justify-content:center;
+}
+.icon-btn:hover{ background:var(--navy-tint); color:var(--navy); border-color:var(--navy); }
+
+/* ---------- Tab navigation ---------- */
+.tabnav{ display:flex; gap:8px; margin-bottom:22px; border-bottom:1px solid var(--border-strong); }
+.tab-btn{
+  background:none; border:none; cursor:pointer; font-family:inherit;
+  font-size:13.5px; font-weight:600; color:var(--muted);
+  padding:10px 6px; margin-bottom:-1px; border-bottom:2px solid transparent;
+}
+.tab-btn:hover{ color:var(--navy-dark); }
+.tab-btn.active{ color:var(--navy); border-bottom-color:var(--navy); }
+
+/* ---------- Status badges ---------- */
+.badge{ display:inline-flex; align-items:center; gap:5px; border-radius:999px; padding:4px 11px; font-size:11.5px; font-weight:700; letter-spacing:.01em; }
+.badge-open{ background:var(--warn-tint); color:var(--warn); }
+.badge-done{ background:var(--ok-tint); color:var(--ok); }
+.badge-neutral{ background:#EDEFF1; color:#556; }
+
+/* ---------- Registry ---------- */
+.registry-toolbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:12px; flex-wrap:wrap; }
+.registry-toolbar h2{ margin:0; font-size:19px; color:var(--navy-dark); }
+.registry-search{ display:flex; gap:8px; }
+.registry-search input, .registry-search select{
+  border:1px solid var(--border-strong); border-radius:7px; padding:8px 10px; font-size:13px; font-family:inherit;
+}
+table.registry{ width:100%; border-collapse:collapse; font-size:13px; background:#fff; border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+table.registry th{ background:var(--navy); color:#fff; text-align:left; padding:10px 12px; font-size:12px; font-weight:600; }
+table.registry td{ padding:10px 12px; border-bottom:1px solid var(--border); vertical-align:middle; }
+table.registry tr:last-child td{ border-bottom:none; }
+table.registry tr:hover td{ background:#FAFBFC; }
+.registry-actions{ display:flex; gap:6px; flex-wrap:wrap; }
+.registry-empty{ text-align:center; padding:50px 20px; color:var(--muted); background:#fff; border:1px dashed var(--border-strong); border-radius:10px; }
+.history-row td{ background:#FBFCFD; padding:12px 16px; font-size:12.5px; color:var(--muted); }
+.history-row ul{ margin:4px 0 0; padding-left:18px; }
+.history-event{ margin-top:12px; }
+.history-event:first-of-type{ margin-top:8px; }
+.history-event-head{ font-weight:600; color:var(--navy-dark); margin-bottom:6px; }
+table.history-table{ width:100%; border-collapse:collapse; font-size:12px; background:#fff; }
+table.history-table th{ background:#E4E9ED; color:var(--navy-dark); text-align:left; padding:6px 8px; font-weight:600; }
+table.history-table td{ padding:6px 8px; border-bottom:1px solid var(--border); }
+
+/* ---------- Recontrol view ---------- */
+.recontrol-header{ background:var(--navy-tint); border:1px solid #CBD9E4; border-radius:10px; padding:14px 18px; margin-bottom:18px; font-size:13.5px; }
+.recontrol-header b{ color:var(--navy-dark); }
+table.grid select.status-select option[value="zrealizowane"]{ color:var(--ok); }
+table.grid select.status-select option[value="otwarte"]{ color:var(--danger); }
+
+@media (max-width:720px){
+  table.registry{ display:block; overflow-x:auto; white-space:nowrap; }
+}
+.btn{
+  display:inline-flex; align-items:center; gap:8px;
+  border-radius:7px; border:1px solid transparent;
+  font-size:13.5px; font-weight:600; padding:9px 16px;
+  cursor:pointer; font-family:inherit;
+}
+.btn-primary{ background:var(--navy); color:#fff; }
+.btn-primary:hover{ background:var(--navy-dark); }
+.btn-ghost{ background:#fff; border-color:var(--border-strong); color:var(--navy-dark); }
+.btn-ghost:hover{ background:var(--navy-tint); }
+.btn-add{ background:var(--navy-tint); color:var(--navy); border-color:#CBD9E4; }
+.btn-add:hover{ background:#DDEAF3; }
+.btn-danger{ background:var(--danger-tint); color:var(--danger); border-color:#EAC9C2; }
+
+/* ---------- Radios (Oswiadczenie) ---------- */
+.radio-list{ display:flex; flex-direction:column; gap:10px; }
+.radio-item{
+  display:flex; align-items:flex-start; gap:10px;
+  border:1px solid var(--border); border-radius:8px; padding:10px 12px;
+}
+.radio-item input{ margin-top:3px; }
+.radio-item .radio-label{ font-size:13.5px; }
+.radio-item .sub-input{ margin-top:8px; width:100%; }
+
+/* ---------- Photos ---------- */
+.upload-zone{
+  border:1.5px dashed var(--border-strong);
+  border-radius:9px;
+  padding:22px;
+  text-align:center;
+  background:#FAFBFC;
+  cursor:pointer;
+}
+.upload-zone:hover{ background:var(--navy-tint); border-color:var(--navy); }
+.upload-zone input{ display:none; }
+.upload-zone .upload-title{ font-weight:600; color:var(--navy-dark); font-size:14px; }
+.upload-zone .upload-sub{ font-size:12px; color:var(--muted); margin-top:4px; }
+
+.photo-grid{
+  display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin-top:16px;
+}
+.photo-card{
+  border:1px solid var(--border); border-radius:9px; overflow:hidden; background:#fff;
+}
+.photo-card .thumb{
+  width:100%; height:150px; object-fit:cover; display:block; background:#eee;
+}
+.photo-card .photo-body{ padding:10px; display:flex; flex-direction:column; gap:6px; }
+.photo-card input[type=text], .photo-card input[type=date]{
+  border:1px solid var(--border); border-radius:5px; padding:6px 8px; font-size:12.5px; width:100%;
+}
+.photo-card .photo-foot{ display:flex; justify-content:space-between; align-items:center; }
+.photo-card .photo-foot .fname{ font-size:11px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:150px; }
+.empty-note{ font-size:13px; color:var(--muted); padding:6px 2px; }
+
+/* ---------- Generate bar ---------- */
+.generate-bar{
+  position:sticky; bottom:16px;
+  background:var(--paper); border:1px solid var(--border-strong);
+  border-radius:12px; padding:14px 18px; margin-top:24px;
+  display:flex; align-items:center; justify-content:space-between; gap:16px;
+  box-shadow:0 8px 24px rgba(20,40,60,.12);
+}
+.generate-bar .msg{ font-size:12.5px; color:var(--muted); }
+.validation-list{ font-size:12.5px; color:var(--danger); margin:6px 0 0; padding-left:18px; }
+
+/* ================= PROTOCOL (generated document) view ================= */
+#protocolView{ display:none; }
+.protocol-toolbar{
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:18px; gap:12px; flex-wrap:wrap;
+}
+.doc-page{
+  background:var(--paper);
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:46px 52px;
+  font-family:var(--font-doc);
+  color:#171b1f;
+}
+.doc-eyebrow{
+  text-align:center; font-size:11px; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--muted); font-family:var(--font-ui); font-weight:600;
+}
+.doc-title{
+  text-align:center; font-size:23px; font-weight:700; margin:6px 0 4px; color:var(--navy-dark);
+}
+.doc-sub{
+  text-align:center; font-size:13px; font-style:italic; color:var(--muted);
+  padding-bottom:14px; border-bottom:2px solid var(--navy-dark); margin-bottom:18px;
+}
+.doc-meta{
+  font-size:14px; margin-bottom:16px;
+  display:flex; justify-content:space-between; align-items:baseline; gap:16px;
+}
+.doc-meta b{ margin-right:4px; }
+.doc-section-title{
+  font-family:var(--font-ui); font-size:14.5px; font-weight:700; color:var(--navy-dark);
+  border-bottom:1px solid var(--navy-dark); padding-bottom:4px; margin:22px 0 10px;
+}
+.doc-field{ font-size:14px; margin:6px 0; }
+.doc-field b{ margin-right:4px; }
+table.doc-table{
+  width:100%; border-collapse:collapse; font-size:12.5px; margin-top:6px; font-family:var(--font-ui);
+}
+table.doc-table th{
+  background:var(--navy-dark); color:#fff; padding:7px 8px; text-align:left; font-size:11.5px;
+}
+table.doc-table td{
+  border:1px solid #C7CFD6; padding:6px 8px; vertical-align:top;
+}
+table.doc-table tr.row-ok td{ background:#E9F5EC; }
+table.doc-table tr.row-bad td{ background:#FBEBE8; }
+table.doc-table tr.row-neutral td{ background:#EDEFF1; }
+.doc-checkbox-line{ font-size:14px; margin:6px 0; }
+.doc-photo-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:8px; }
+.doc-photo-card{ border:1px solid #C7CFD6; border-radius:6px; overflow:hidden; }
+.doc-photo-card img{ width:100%; height:180px; object-fit:cover; display:block; }
+.doc-photo-card .cap{ font-family:var(--font-ui); font-size:11.5px; padding:8px; color:#333; }
+.doc-signrow-labels{
+  display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:18px;
+  font-family:var(--font-ui); font-weight:700; font-size:12.5px; color:var(--navy-dark);
+  letter-spacing:.02em;
+}
+.doc-signrow{ display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:6px; }
+.doc-signbox{ border:1px solid #C7CFD6; border-radius:6px; padding:14px; font-family:var(--font-ui); font-size:12.5px; min-height:90px; }
+.doc-signbox b{ display:block; margin-bottom:8px; font-size:12.5px; }
+.gen-footer{
+  margin-top:28px; padding:14px 16px; background:var(--navy-tint);
+  border:1px solid #CBD9E4; border-radius:8px; font-family:var(--font-ui);
+  font-size:12.5px; color:var(--navy-dark); line-height:1.6;
+}
+.gen-footer b{ color:var(--navy-dark); }
+
+@media screen and (max-width:720px){
+  .app{ padding:16px 12px 90px; }
+
+  .topbar{ flex-direction:column; align-items:flex-start; gap:10px; margin-bottom:20px; }
+  .topbar .brand h1{ font-size:18px; }
+  .status-pill{ align-self:flex-start; }
+
+  .section-head{ padding:11px 14px; }
+  .section-head h2{ font-size:13.5px; }
+  .section-body{ padding:14px; }
+
+  .field-grid{ grid-template-columns:1fr; }
+  .field input[type=text], .field input[type=date], .field textarea, .field select{
+    font-size:16px; /* zapobiega auto-zoomowi w Safari na iOS */
+    padding:11px 12px;
+  }
+
+  table.grid{ font-size:12px; }
+  table.grid td input[type=text], table.grid td select, table.grid td input[type=date]{
+    font-size:13px; padding:8px 7px;
+  }
+  .icon-btn{ width:32px; height:32px; font-size:16px; }
+
+  .photo-grid{ grid-template-columns:1fr; }
+  .upload-zone{ padding:18px 14px; }
+
+  .generate-bar{
+    position:sticky; bottom:8px; flex-direction:column; align-items:stretch;
+    gap:10px; padding:12px 14px;
+  }
+  .generate-bar .btn{ width:100%; justify-content:center; padding:12px 16px; font-size:14px; }
+
+  .protocol-toolbar{ flex-direction:column; align-items:stretch; }
+  .protocol-toolbar > div{ display:flex; flex-direction:column; gap:10px; }
+  .protocol-toolbar .btn{ width:100%; justify-content:center; }
+
+  .doc-photo-grid{ grid-template-columns:1fr; }
+  .doc-signrow{ grid-template-columns:1fr; }
+  .doc-signrow-labels{ grid-template-columns:1fr; gap:4px; }
+  .doc-page{ padding:22px 16px; }
+  .doc-title{ font-size:19px; }
+  .doc-meta{ flex-direction:column; gap:4px; }
+
+  .btn{ min-height:40px; }
+}
+
+@media screen and (max-width:400px){
+  .topbar .brand h1{ font-size:16.5px; }
+  .doc-title{ font-size:17px; }
+}
+
+@media print{
+  @page{ margin:14mm; }
+  body{ background:#fff; }
+  .app{ max-width:none; padding:0; margin:0; }
+  .no-print{ display:none !important; }
+  #formView{ display:none !important; }
+  #protocolView{ display:block !important; }
+  .doc-page{ border:none; padding:0; }
+  .section, .generate-bar{ box-shadow:none; }
+  #comparisonView .doc-page{ page-break-before:always; break-before:page; }
+}
+
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <div class="brand">
+      <span class="eyebrow">Ochrona przeciwpożarowa obiektu</span>
+      <h1>Protokół z kontroli p.poż</h1>
+    </div>
+    <span class="status-pill"><span class="dot"></span> Wypełnianie protokołu</span>
+  </div>
+
+  <nav class="tabnav no-print">
+    <button class="tab-btn active" data-tab="formView" id="navNew">📝 Nowy protokół</button>
+    <button class="tab-btn" data-tab="registryView" id="navRegistry">📋 Spis kontroli</button>
+  </nav>
+
+  <!-- ============ FORMULARZ ============ -->
+  <main id="formView">
+
+    <!-- I. Dane identyfikacyjne obiektu -->
+    <section class="section">
+      <div class="section-head"><span class="num">I</span><h2>Dane identyfikacyjne obiektu</h2></div>
+      <div class="section-body">
+        <div class="field-grid">
+          <div class="field">
+            <label>Numer protokołu</label>
+            <input type="text" id="protokolNr" placeholder="np. 001/PPOŻ">
+            <div style="display:flex; align-items:center; gap:8px; margin-top:4px;">
+              <button type="button" class="icon-btn" id="btnNextNr" title="Podpowiedz kolejny numer" style="width:auto; padding:0 8px;">🔄 kolejny nr</button>
+              <span style="font-size:11.5px; color:var(--muted);">numeracja: 001/PPOŻ, 002/PPOŻ … — możesz też wpisać własną</span>
+            </div>
+          </div>
+          <div class="field">
+            <label>Data kontroli <span class="req">*</span></label>
+            <input type="date" id="dataKontroli">
+          </div>
+          <div class="field full">
+            <label>Nazwa obiektu <span class="req">*</span></label>
+            <select id="nazwaObiektuSel">
+              <option value="">— wybierz obiekt —</option>
+              <option value="Magazyn Wyrobów Gotowych">Magazyn Wyrobów Gotowych</option>
+              <option value="Magazyn Towarów">Magazyn Towarów</option>
+              <option value="Magazyn Główny i Skład Celny">Magazyn Główny i Skład Celny</option>
+              <option value="Magazyn Techniczny">Magazyn Techniczny</option>
+              <option value="Produkcja - Pomadki">Produkcja - Pomadki</option>
+              <option value="Produkcja - Cienie">Produkcja - Cienie</option>
+              <option value="Drukarnia">Drukarnia</option>
+              <option value="Dział Produkcji Mebli POS">Dział Produkcji Mebli POS</option>
+              <option value="Dział Produkcji Mebli Kontraktowych">Dział Produkcji Mebli Kontraktowych</option>
+              <option value="Dział Utrzymania Ruchu">Dział Utrzymania Ruchu</option>
+              <option value="Dział Projektowy">Dział Projektowy</option>
+              <option value="Laboratorium Kontroli Fizyko-Chemicznej">Laboratorium Kontroli Fizyko-Chemicznej</option>
+              <option value="Laboratorium Mikrobiologiczne">Laboratorium Mikrobiologiczne</option>
+              <option value="Specjalistyczne Centrum Badawczo-Rozwojowe">Specjalistyczne Centrum Badawczo-Rozwojowe</option>
+              <option value="Dział Produkcji Kontentu">Dział Produkcji Kontentu</option>
+              <option value="Dział Produkcji Kontraktowej (White Label)">Dział Produkcji Kontraktowej (White Label)</option>
+              <option value="Dział E-Commerce">Dział E-Commerce</option>
+              <option value="Biuro Obsługi Klienta">Biuro Obsługi Klienta</option>
+              <option value="Firmowy Punkt Sprzedaży">Firmowy Punkt Sprzedaży</option>
+              <option value="Dział Firmowych Punktów Sprzedaży">Dział Firmowych Punktów Sprzedaży</option>
+              <option value="Dział Obsługi Klienta B2B">Dział Obsługi Klienta B2B</option>
+              <option value="Sekretariat (Front Desk)">Sekretariat (Front Desk)</option>
+              <option value="Dział IT">Dział IT</option>
+              <option value="Dział Ochrony">Dział Ochrony</option>
+              <option value="Dział Ochrony Środowiska">Dział Ochrony Środowiska</option>
+              <option value="Dział Transportu">Dział Transportu</option>
+              <option value="Dział Zakupów">Dział Zakupów</option>
+              <option value="Dział Personalny (HR)">Dział Personalny (HR)</option>
+              <option value="Dział Finansowy / Księgowość">Dział Finansowy / Księgowość</option>
+              <option value="Dział BHP">Dział BHP</option>
+              <option value="Poddział Logistyczno-Administracyjny">Poddział Logistyczno-Administracyjny</option>
+              <option value="__inne__">Inny obiekt (wpisz ręcznie)</option>
+            </select>
+            <input type="text" id="nazwaObiektu" placeholder="wpisz nazwę obiektu" style="margin-top:8px; display:none;">
+          </div>
+          <div class="field">
+            <label>Adres obiektu</label>
+            <input type="text" id="adresObiektu" value="37-700 Przemyśl ul. Lwowska 154">
+          </div>
+          <div class="field">
+            <label>Właściciel / zarządca obiektu</label>
+            <input type="text" id="wlascicielObiektu" value="INGLOT S.A.">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- II. Dane instalacji -->
+    <section class="section">
+      <div class="section-head"><span class="num">II</span><h2>Dane instalacji / systemu (jeżeli dotyczy, np. SSP)</h2></div>
+      <div class="section-body">
+        <div class="field-grid">
+          <div class="field">
+            <label>Typ i producent centrali</label>
+            <select id="typCentraliSel">
+              <option value="">— wybierz —</option>
+              <option value="POLON 4900">POLON 4900</option>
+              <option value="POLON 6000">POLON 6000</option>
+              <option value="POLON 4000">POLON 4000</option>
+              <option value="__inne__">Inna (wpisz ręcznie)</option>
+            </select>
+            <input type="text" id="typCentrali" placeholder="wpisz typ i producenta centrali" style="margin-top:8px; display:none;">
+          </div>
+          <div class="field">
+            <label>Zmiany od ostatniego przeglądu</label>
+            <input type="text" id="zmiany" placeholder="modernizacje, rozbudowy">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- III. Zakres kontroli -->
+    <section class="section">
+      <div class="section-head"><span class="num">III</span><h2>Zakres kontroli i ocena stanu technicznego</h2></div>
+      <div class="section-body">
+        <p class="section-hint">Dla każdego elementu wskaż lokalizację, stan techniczny oraz ewentualne uwagi.</p>
+        <div class="table-wrap">
+          <table class="grid">
+            <thead>
+              <tr><th style="width:34px;">Lp.</th><th>Element / instalacja</th><th>Stan techniczny</th><th>Uwagi</th></tr>
+            </thead>
+            <tbody id="zakresBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- IV. Usterki i zalecenia -->
+    <section class="section">
+      <div class="section-head"><span class="num">IV</span><h2>Stwierdzone usterki i zalecenia</h2></div>
+      <div class="section-body">
+        <p class="section-hint">Dla każdej usterki podaj zalecane działanie, termin realizacji i osobę odpowiedzialną.</p>
+        <div class="table-wrap">
+          <table class="grid">
+            <thead>
+              <tr>
+                <th style="width:34px;">Lp.</th><th>Opis usterki</th><th>Lokalizacja</th><th>Zalecane działanie</th>
+                <th>Podstawa prawna</th><th>Termin</th><th>Odpowiedzialny</th><th>Status</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="defectBody"></tbody>
+          </table>
+        </div>
+        <div class="row-actions">
+          <button type="button" class="btn btn-add" id="btnAddDefect">+ Dodaj usterkę</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- V. Naprawy -->
+    <section class="section">
+      <div class="section-head"><span class="num">V</span><h2>Wykonane naprawy i konserwacje podczas przeglądu</h2></div>
+      <div class="section-body">
+        <div class="field full">
+          <textarea id="naprawy" placeholder="np. wymieniono uszkodzoną gaśnicę w strefie 2, oczyszczono czujki…"></textarea>
+        </div>
+      </div>
+    </section>
+
+    <!-- VI. Oświadczenie -->
+    <section class="section">
+      <div class="section-head"><span class="num">VI</span><h2>Oświadczenie o stanie systemu / ograniczeniach</h2></div>
+      <div class="section-body">
+        <div class="radio-list">
+          <label class="radio-item">
+            <input type="radio" name="oswiadczenie" value="pelni-sprawny" checked>
+            <span class="radio-label">System w pełni sprawny, brak ograniczeń.</span>
+          </label>
+          <label class="radio-item">
+            <input type="radio" name="oswiadczenie" value="z-zastrzezeniami">
+            <span class="radio-label">System sprawny z zastrzeżeniami – patrz zalecenia w pkt IV.</span>
+          </label>
+          <label class="radio-item">
+            <input type="radio" name="oswiadczenie" value="ograniczenia">
+            <span class="radio-label">
+              Stwierdzono ograniczenia w działaniu systemu do czasu usunięcia usterek.
+              <input type="text" id="ograniczeniaOpis" class="sub-input" style="display:none;" placeholder="opisz ograniczenia">
+            </span>
+          </label>
+        </div>
+        <div class="field full" style="margin-top:14px;">
+          <label>Opis / uwagi (część opisowa, opcjonalnie)</label>
+          <textarea id="oswiadczenieOpis" placeholder="Dodatkowy opis stanu systemu, okoliczności, ustaleń itp."></textarea>
+        </div>
+      </div>
+    </section>
+    <section class="section">
+      <div class="section-head"><span class="num">VII</span><h2>Załączniki – zdjęcia z kontroli</h2></div>
+      <div class="section-body">
+        <p class="section-hint">Dołącz zdjęcia poglądowe z dnia kontroli (dokumentacja fotograficzna stwierdzonych usterek i stanu instalacji).</p>
+        <div class="upload-zone" id="uploadZone">
+          <input type="file" id="photoInput" accept="image/*" multiple>
+          <div class="upload-title">Kliknij, aby dodać zdjęcia, lub przeciągnij pliki tutaj</div>
+          <div class="upload-sub">Obsługiwane formaty: JPG, PNG · można dodać wiele zdjęć</div>
+        </div>
+        <p class="empty-note" id="photoEmpty">Nie dodano jeszcze żadnych zdjęć.</p>
+        <div class="photo-grid" id="photoGrid"></div>
+      </div>
+    </section>
+
+    <!-- VIII. Podpisy -->
+    <section class="section">
+      <div class="section-head"><span class="num">VIII</span><h2>Podpisy</h2></div>
+      <div class="section-body">
+        <div class="field-grid">
+          <div class="field">
+            <label>Imię i nazwisko osoby wykonującej przegląd <span class="req">*</span></label>
+            <input type="text" id="osobaImie" value="Paweł Kikiela" placeholder="np. Jan Kowalski">
+          </div>
+          <div class="field">
+            <label>Stanowisko / uprawnienia</label>
+            <input type="text" id="osobaFirma" value="Główny Specjalista ds. BHP Inspektor Ochrony Przeciwpożarowej SIOP/54/2022/2/17" placeholder="np. uprawnienia rzeczoznawcy ppoż. nr …">
+          </div>
+        </div>
+        <p class="section-hint" style="margin-top:12px;">Pole „Właściciel / zarządca obiektu” pozostaje puste do uzupełnienia i podpisania po wydrukowaniu protokołu.</p>
+      </div>
+    </section>
+
+    <div class="generate-bar">
+      <div>
+        <div style="font-weight:600; font-size:14px; color:var(--navy-dark);">Gotowy do wygenerowania protokołu?</div>
+        <div class="msg">Zostanie utworzony dokument gotowy do wydruku i podpisania celem zatwierdzenia.</div>
+        <div id="validationBox"></div>
+      </div>
+      <button class="btn btn-primary" id="btnGenerate">Generuj protokół →</button>
+    </div>
+  </main>
+
+  <!-- ============ WYGENEROWANY PROTOKÓŁ ============ -->
+  <main id="protocolView"></main>
+
+  <!-- ============ SPIS KONTROLI ============ -->
+  <main id="registryView" style="display:none;"></main>
+
+  <!-- ============ REKONTROLA ============ -->
+  <main id="recontrolView" style="display:none;"></main>
+
+  <!-- ============ RAPORT PORÓWNAWCZY ============ -->
+  <main id="comparisonView" style="display:none;"></main>
+
+</div>
+
+<script>
+/* ==========================================================
+   Dane statyczne
+   ========================================================== */
+const ZAKRES_ELEMENTS = [
+  "System sygnalizacji pożaru (SSP) – centrala, czujki, ROP, sygnalizatory",
+  "Dźwiękowy system ostrzegawczy (DSO)",
+  "System sygnalizacji pożaru – zasilanie podstawowe i rezerwowe (akumulatory)",
+  "Hydranty wewnętrzne i zewnętrzne",
+  "Gaśnice i sprzęt gaśniczy",
+  "Drzwi i bramy przeciwpożarowe / klapy przeciwpożarowe",
+  "System oddymiania (SUG / oddymianie klatek schodowych)",
+  "Przeciwpożarowy wyłącznik prądu (PWP)",
+  "Oświetlenie awaryjne i ewakuacyjne",
+  "Drogi i wyjścia ewakuacyjne / oznakowanie",
+  "Detektory dymu i czadu",
+  "Droga pożarowa i dojazd dla PSP",
+];
+
+const STATUS_OPTIONS = ["OK", "usterka", "nie wykonano", "nie dotyczy"];
+const UWAGI_OPTIONS = ["Ocena wizualna", "Nie dotyczy", "Inne"];
+const DEFECT_STATUS_OPTIONS = ["otwarte", "w trakcie", "zrealizowane"];
+const STORAGE_KEY = "ppoz_protocols_v1";
+
+const PERSONNEL_LIST = [
+  "Antoniak Piotr", "Antoniak-Buć Jolanta", "Bazanowski Kamil", "Berej Sabina",
+  "Białko Edyta", "Borycka Elżbieta", "Bratkowska Aleksandra", "Chętkiewicz Paweł",
+  "Czerw Milena", "Długosz Adriana", "Dubanik Justyna", "Fic Krzysztof",
+  "Figiela Oksana", "Fiołek Janusz", "Fleszar-Chmura Dominika", "Gawlik-Pachla Katarzyna",
+  "Hankus Artur", "Inglot Barbara", "Inglot Elżbieta", "Inglot Grzegorz",
+  "Inglot Milena", "Inglot Zbigniew (dr)", "Jabłońska Kinga", "Jarosiewicz Maria",
+  "Kaczmar Joanna", "Kijak Paula", "Kijanka Kamil", "Kikiela Paweł",
+  "Kluz-Pękalska Magdalena", "Kobryło Joanna", "Kobylański Maciej", "Komenda Tomasz",
+  "Kondro-Szumełda Agnieszka", "Kordel Daniel", "Korniak Judyta", "Kozioł Ewa",
+  "Król Adam", "Król Barbara", "Królikiewicz Sylwia", "Krygowska Małgorzata",
+  "Kuczkowska Magdalena", "Kulczycka Joanna", "Kulon Anna", "Kułynycz Wojciech",
+  "Łojko Krzysztof", "Łyzak Przemysław", "Mac Natalia", "Makara Andrzej",
+  "Matusiewicz Marta", "Michta Urszula", "Miśniak Marian", "Ochalska Jowita",
+  "Orowicz Marzena", "Pietruszka Renata", "Pilch Magdalena", "Polny Bogusław",
+  "Rodzoch Katarzyna", "Rozowska Justyna", "Rutka Kamila", "Rybak Paulina",
+  "Ryglowski Piotr", "Ryś Barbara", "Rzymkowska-Kumar Paulina", "Sawicki Andrzej",
+  "Subramoney Roy", "Szczepanowicz Ryszard", "Tomaszewska Lucyna", "Trybała Katarzyna",
+  "Wiazowska-Lickiewicz Ewa", "Wolanin Magdalena", "Zalas Anna", "Ziemiańska Anna",
+  "Żurawska Kamila",
+];
+
+let defectRows = [];
+let defectSeq = 0;
+let currentRecontrolId = null;
+
+/* ==========================================================
+   Menedżer zdjęć (wielokrotnego użytku — kontrola + rekontrola)
+   ========================================================== */
+function makePhotoManager(ids) {
+  let items = [];
+  let seq = 0;
+
+  function wire() {
+    const zone = document.getElementById(ids.zone);
+    const input = document.getElementById(ids.input);
+    if (!zone || !input) return;
+    zone.addEventListener("click", () => input.click());
+    zone.addEventListener("dragover", e => { e.preventDefault(); zone.style.background = "var(--navy-tint)"; });
+    zone.addEventListener("dragleave", () => { zone.style.background = ""; });
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      zone.style.background = "";
+      handleFiles(e.dataTransfer.files);
+    });
+    input.addEventListener("change", () => handleFiles(input.files));
+    render();
+  }
+
+  function handleFiles(fileList) {
+    Array.from(fileList).forEach(file => {
+      if (!file.type.startsWith("image/")) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        items.push({
+          id: ++seq,
+          dataUrl: reader.result,
+          name: file.name,
+          opis: "",
+          data: new Date().toISOString().slice(0, 10),
+        });
+        render();
+      };
+      reader.readAsDataURL(file);
+    });
+    const input = document.getElementById(ids.input);
+    if (input) input.value = "";
+  }
+
+  function remove(id) {
+    items = items.filter(p => p.id !== id);
+    render();
+  }
+
+  function render() {
+    const grid = document.getElementById(ids.grid);
+    const empty = document.getElementById(ids.empty);
+    if (!grid) return;
+    grid.innerHTML = "";
+    if (empty) empty.style.display = items.length ? "none" : "block";
+    items.forEach(p => {
+      const card = document.createElement("div");
+      card.className = "photo-card";
+      card.innerHTML = `
+        <img class="thumb" src="${p.dataUrl}" alt="Zdjęcie">
+        <div class="photo-body">
+          <input type="text" placeholder="Opis / lokalizacja" data-p="opis">
+          <input type="date" data-p="data">
+          <div class="photo-foot">
+            <span class="fname">${escapeHtml(p.name)}</span>
+            <button type="button" class="icon-btn" title="Usuń zdjęcie" data-p-remove>✕</button>
+          </div>
+        </div>
+      `;
+      grid.appendChild(card);
+      card.querySelector('[data-p="opis"]').value = p.opis;
+      card.querySelector('[data-p="data"]').value = p.data;
+      card.querySelector('[data-p="opis"]').addEventListener("input", e => p.opis = e.target.value);
+      card.querySelector('[data-p="data"]').addEventListener("input", e => p.data = e.target.value);
+      card.querySelector('[data-p-remove]').addEventListener("click", () => remove(p.id));
+    });
+  }
+
+  return {
+    wire,
+    getItems: () => items,
+    reset: () => { items = []; seq = 0; },
+  };
+}
+
+const inspectionPhotos = makePhotoManager({ zone: "uploadZone", input: "photoInput", grid: "photoGrid", empty: "photoEmpty" });
+const recontrolPhotos = makePhotoManager({ zone: "rkUploadZone", input: "rkPhotoInput", grid: "rkPhotoGrid", empty: "rkPhotoEmpty" });
+
+/* ==========================================================
+   Init
+   ========================================================== */
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("dataKontroli").valueAsDate = new Date();
+  document.getElementById("protokolNr").value = computeNextProtocolNumber();
+  buildZakresTable();
+  addDefectRow();
+  addDefectRow();
+  wireOswiadczenie();
+  wireNazwaObiektu();
+  wireTypCentrali();
+  inspectionPhotos.wire();
+
+  document.getElementById("btnAddDefect").addEventListener("click", () => addDefectRow());
+  document.getElementById("btnGenerate").addEventListener("click", generateProtocol);
+  document.getElementById("btnNextNr").addEventListener("click", () => {
+    document.getElementById("protokolNr").value = computeNextProtocolNumber();
+  });
+
+  document.getElementById("navNew").addEventListener("click", () => showView("formView"));
+  document.getElementById("navRegistry").addEventListener("click", () => showView("registryView"));
+});
+
+/* ==========================================================
+   Nawigacja między widokami
+   ========================================================== */
+function showView(name) {
+  ["formView", "protocolView", "registryView", "recontrolView", "comparisonView"].forEach(v => {
+    const el = document.getElementById(v);
+    if (el) el.style.display = (v === name) ? "block" : "none";
+  });
+  document.getElementById("navNew").classList.toggle("active", name === "formView");
+  document.getElementById("navRegistry").classList.toggle("active", ["registryView", "recontrolView", "comparisonView"].includes(name));
+  if (name === "registryView") renderRegistryView();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+/* ==========================================================
+   Rejestr (localStorage)
+   ========================================================== */
+function loadRegistry() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    console.error("Błąd odczytu rejestru kontroli:", e);
+    return [];
+  }
+}
+
+function saveRegistryList(list) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    return true;
+  } catch (e) {
+    console.error("Błąd zapisu rejestru kontroli:", e);
+    alert("Nie udało się zapisać danych lokalnie w przeglądarce. Możliwe, że limit pamięci (localStorage) został przekroczony — spróbuj dołączać mniej lub mniejsze zdjęcia.");
+    return false;
+  }
+}
+
+function generateId() {
+  return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ("id-" + Date.now() + "-" + Math.random().toString(36).slice(2));
+}
+
+function recordStatus(record) {
+  if (!record.defects || record.defects.length === 0) return "done";
+  return record.defects.every(d => d.status === "zrealizowane") ? "done" : "open";
+}
+
+/* ==========================================================
+   Automatyczna numeracja protokołów (NNN/PPOŻ)
+   ========================================================== */
+function computeNextProtocolNumber() {
+  const list = loadRegistry();
+  let max = 0;
+  list.forEach(r => {
+    const match = /^(\d+)\s*\/\s*PPO[ZŻ]/i.exec((r.protokolNr || "").trim());
+    if (match) {
+      const n = parseInt(match[1], 10);
+      if (!isNaN(n) && n > max) max = n;
+    }
+  });
+  const next = max + 1;
+  return String(next).padStart(3, "0") + "/PPOŻ";
+}
+
+/* ==========================================================
+   III. Zakres kontroli — tabela statyczna
+   ========================================================== */
+function buildZakresTable() {
+  const tbody = document.getElementById("zakresBody");
+  tbody.innerHTML = "";
+  ZAKRES_ELEMENTS.forEach((name, i) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="lp">${i + 1}</td>
+      <td class="element-name">${name}</td>
+      <td>
+        <select data-zakres-stan="${i}">
+          <option value="">— wybierz —</option>
+          ${STATUS_OPTIONS.map(s => `<option value="${s}">${s}</option>`).join("")}
+        </select>
+      </td>
+      <td>
+        <select data-zakres-uwagi-sel="${i}">
+          <option value="">— wybierz —</option>
+          ${UWAGI_OPTIONS.map(u => `<option value="${u}">${u === "Inne" ? "Inne (opisz)" : u}</option>`).join("")}
+        </select>
+        <input type="text" data-zakres-uwagi-txt="${i}" placeholder="opisz uwagę" style="display:none; margin-top:6px;">
+      </td>
+    `;
+    tbody.appendChild(tr);
+
+    const select = tr.querySelector(`[data-zakres-stan="${i}"]`);
+    select.addEventListener("change", () => applyStanRowColor(tr, select.value));
+    applyStanRowColor(tr, select.value);
+
+    const uwagiSel = tr.querySelector(`[data-zakres-uwagi-sel="${i}"]`);
+    const uwagiTxt = tr.querySelector(`[data-zakres-uwagi-txt="${i}"]`);
+    uwagiSel.addEventListener("change", () => {
+      if (uwagiSel.value === "Inne") {
+        uwagiTxt.style.display = "block";
+        uwagiTxt.focus();
+      } else {
+        uwagiTxt.style.display = "none";
+        uwagiTxt.value = "";
+      }
+    });
+  });
+}
+
+function stanClass(stan) {
+  if (stan === "OK") return "row-ok";
+  if (stan === "usterka") return "row-bad";
+  if (stan === "nie wykonano" || stan === "nie dotyczy") return "row-neutral";
+  return "";
+}
+
+function applyStanRowColor(tr, stan) {
+  tr.classList.remove("row-ok", "row-bad", "row-neutral");
+  const cls = stanClass(stan);
+  if (cls) tr.classList.add(cls);
+}
+
+function readZakresData() {
+  return ZAKRES_ELEMENTS.map((name, i) => {
+    const uwagiSel = document.querySelector(`[data-zakres-uwagi-sel="${i}"]`).value;
+    const uwagiTxt = document.querySelector(`[data-zakres-uwagi-txt="${i}"]`).value.trim();
+    return {
+      name,
+      stan: document.querySelector(`[data-zakres-stan="${i}"]`).value,
+      uwagi: uwagiSel === "Inne" ? uwagiTxt : uwagiSel,
+    };
+  });
+}
+
+/* ==========================================================
+   IV. Usterki i zalecenia — tabela dynamiczna
+   ========================================================== */
+function addDefectRow(initial) {
+  const id = ++defectSeq;
+  defectRows.push({
+    id,
+    opis: initial?.opis || "",
+    lokalizacja: initial?.lokalizacja || "",
+    dzialanie: initial?.dzialanie || "",
+    podstawa: initial?.podstawa || "",
+    termin: initial?.termin || "",
+    odpowiedzialny: initial?.odpowiedzialny || "",
+    status: initial?.status || "otwarte",
+  });
+  renderDefectTable();
+}
+
+function removeDefectRow(id) {
+  defectRows = defectRows.filter(r => r.id !== id);
+  renderDefectTable();
+}
+
+function renderDefectTable() {
+  const tbody = document.getElementById("defectBody");
+  tbody.innerHTML = "";
+  defectRows.forEach((row, idx) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="lp">${idx + 1}</td>
+      <td><input type="text" data-d="opis" placeholder="opis nieprawidłowości"></td>
+      <td><input type="text" data-d="lokalizacja" placeholder="strefa, element"></td>
+      <td><input type="text" data-d="dzialanie" placeholder="zalecane działanie"></td>
+      <td><input type="text" data-d="podstawa" placeholder="podstawa prawna / norma"></td>
+      <td><input type="date" data-d="termin"></td>
+      <td>
+        <select data-odp-sel="${row.id}">
+          <option value="">— wybierz —</option>
+          ${PERSONNEL_LIST.map(p => `<option value="${p}">${p}</option>`).join("")}
+          <option value="__inne__">Inne (wpisz ręcznie)</option>
+        </select>
+        <input type="text" data-odp-txt="${row.id}" placeholder="wpisz osobę" style="display:none; margin-top:6px;">
+      </td>
+      <td>
+        <select data-d="status">
+          ${DEFECT_STATUS_OPTIONS.map(s => `<option value="${s}">${s}</option>`).join("")}
+        </select>
+      </td>
+      <td>
+        <div class="icon-btn-row">
+          <button type="button" class="icon-btn" title="Usuń wiersz" data-remove="${row.id}">✕</button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+
+    tr.querySelectorAll("[data-d]").forEach(el => {
+      const key = el.getAttribute("data-d");
+      el.value = row[key];
+      el.addEventListener("input", () => { row[key] = el.value; });
+      el.addEventListener("change", () => { row[key] = el.value; });
+    });
+    tr.querySelector("[data-remove]").addEventListener("click", () => removeDefectRow(row.id));
+
+    const odpSel = tr.querySelector(`[data-odp-sel="${row.id}"]`);
+    const odpTxt = tr.querySelector(`[data-odp-txt="${row.id}"]`);
+    if (row.odpowiedzialny && PERSONNEL_LIST.includes(row.odpowiedzialny)) {
+      odpSel.value = row.odpowiedzialny;
+    } else if (row.odpowiedzialny) {
+      odpSel.value = "__inne__";
+      odpTxt.style.display = "block";
+      odpTxt.value = row.odpowiedzialny;
+    }
+    const syncOdp = () => { row.odpowiedzialny = odpSel.value === "__inne__" ? odpTxt.value : odpSel.value; };
+    odpSel.addEventListener("change", () => {
+      odpTxt.style.display = odpSel.value === "__inne__" ? "block" : "none";
+      if (odpSel.value !== "__inne__") odpTxt.value = "";
+      syncOdp();
+    });
+    odpTxt.addEventListener("input", syncOdp);
+  });
+}
+
+/* ==========================================================
+   I. Nazwa obiektu — lista wyboru wg schematu organizacyjnego
+   ========================================================== */
+function wireNazwaObiektu() {
+  const sel = document.getElementById("nazwaObiektuSel");
+  const txt = document.getElementById("nazwaObiektu");
+  sel.addEventListener("change", () => {
+    if (sel.value === "__inne__") {
+      txt.style.display = "block";
+      txt.value = "";
+      txt.focus();
+    } else {
+      txt.style.display = "none";
+      txt.value = sel.value;
+    }
+  });
+}
+
+/* ==========================================================
+   II. Typ i producent centrali — lista wyboru
+   ========================================================== */
+function wireTypCentrali() {
+  const sel = document.getElementById("typCentraliSel");
+  const txt = document.getElementById("typCentrali");
+  sel.addEventListener("change", () => {
+    if (sel.value === "__inne__") {
+      txt.style.display = "block";
+      txt.value = "";
+      txt.focus();
+    } else {
+      txt.style.display = "none";
+      txt.value = sel.value;
+    }
+  });
+}
+
+/* ==========================================================
+   VI. Oświadczenie — pokaż pole tekstowe dla ograniczeń
+   ========================================================== */
+function wireOswiadczenie() {
+  const radios = document.querySelectorAll('input[name="oswiadczenie"]');
+  const limitField = document.getElementById("ograniczeniaOpis");
+  radios.forEach(r => {
+    r.addEventListener("change", () => {
+      limitField.style.display = (r.value === "ograniczenia" && r.checked) ? "block" : limitField.style.display;
+      if (r.checked && r.value !== "ograniczenia") limitField.style.display = "none";
+    });
+  });
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+/* ==========================================================
+   Walidacja + generowanie protokołu (Nowy protokół)
+   ========================================================== */
+function val(id) { return document.getElementById(id).value.trim(); }
+
+function validate() {
+  const errors = [];
+  if (!val("nazwaObiektu")) errors.push("Podaj nazwę kontrolowanego obiektu (pkt I).");
+  if (!val("dataKontroli")) errors.push("Podaj datę kontroli (pkt I).");
+  if (!val("osobaImie")) errors.push("Podaj imię i nazwisko osoby wykonującej przegląd (pkt VIII) — jest ono wpisywane jako osoba generująca protokół.");
+  return errors;
+}
+
+function fmtDate(iso) {
+  if (!iso) return "……………………………";
+  const [y, m, d] = iso.split("-");
+  return `${d}.${m}.${y}`;
+}
+function fmtDateTime(dtInput) {
+  const dt = dtInput instanceof Date ? dtInput : new Date(dtInput);
+  const d = String(dt.getDate()).padStart(2, "0");
+  const m = String(dt.getMonth() + 1).padStart(2, "0");
+  const y = dt.getFullYear();
+  const h = String(dt.getHours()).padStart(2, "0");
+  const min = String(dt.getMinutes()).padStart(2, "0");
+  return `${d}.${m}.${y}, ${h}:${min}`;
+}
+
+function generateProtocol() {
+  const errors = validate();
+  const box = document.getElementById("validationBox");
+  if (errors.length) {
+    box.innerHTML = `<ul class="validation-list">${errors.map(e => `<li>${e}</li>`).join("")}</ul>`;
+    box.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+  box.innerHTML = "";
+
+  const zakres = readZakresData();
+  const oswiadczenieEl = document.querySelector('input[name="oswiadczenie"]:checked');
+  const oswiadczenie = oswiadczenieEl ? oswiadczenieEl.value : null;
+  const now = new Date();
+
+  const data = {
+    protokolNr: val("protokolNr") || "………… / …………",
+    dataKontroli: val("dataKontroli"),
+    nazwaObiektu: val("nazwaObiektu"),
+    adresObiektu: val("adresObiektu"),
+    wlasciciel: val("wlascicielObiektu"),
+    typCentrali: val("typCentrali"),
+    zmiany: val("zmiany"),
+    zakres,
+    defects: defectRows,
+    naprawy: val("naprawy"),
+    oswiadczenie,
+    oswiadczenieOpis: val("oswiadczenieOpis"),
+    ograniczeniaOpis: val("ograniczeniaOpis"),
+    photos: inspectionPhotos.getItems(),
+    osobaImie: val("osobaImie"),
+    osobaFirma: val("osobaFirma"),
+    generatedAt: now,
+  };
+
+  renderDoc(data, { mode: "new" });
+  showView("protocolView");
+}
+
+function oswiadczenieLabel(v) {
+  if (v === "pelni-sprawny") return "System w pełni sprawny, brak ograniczeń.";
+  if (v === "z-zastrzezeniami") return "System sprawny z zastrzeżeniami – patrz zalecenia w pkt IV.";
+  if (v === "ograniczenia") return "Stwierdzono ograniczenia w działaniu systemu do czasu usunięcia usterek.";
+  return "Nie wskazano.";
+}
+
+function saveCurrentToRegistry(d, btn) {
+  const list = loadRegistry();
+  const record = {
+    ...d,
+    id: generateId(),
+    generatedAt: (d.generatedAt instanceof Date) ? d.generatedAt.toISOString() : d.generatedAt,
+    rekontrole: [],
+  };
+  list.push(record);
+  const ok = saveRegistryList(list);
+  if (ok) {
+    btn.textContent = "✓ Zapisano do rejestru";
+    btn.disabled = true;
+    btn.classList.remove("btn-add");
+  }
+}
+
+function renderDoc(d, opts = {}) {
+  const mode = opts.mode || "new";
+  const el = document.getElementById("protocolView");
+
+  const zakresRows = d.zakres.map((z, i) => `
+    <tr class="${stanClass(z.stan)}">
+      <td>${i + 1}</td>
+      <td>${escapeHtml(z.name)}</td>
+      <td>${z.stan || "—"}</td>
+      <td>${escapeHtml(z.uwagi) || "—"}</td>
+    </tr>`).join("");
+
+  const defectRowsHtml = d.defects.length ? d.defects.map((x, i) => `
+    <tr class="${stanClass(x.status === "zrealizowane" ? "OK" : x.status === "otwarte" ? "usterka" : "")}">
+      <td>${i + 1}</td>
+      <td>${escapeHtml(x.opis) || "—"}</td>
+      <td>${escapeHtml(x.lokalizacja) || "—"}</td>
+      <td>${escapeHtml(x.dzialanie) || "—"}</td>
+      <td>${escapeHtml(x.podstawa) || "—"}</td>
+      <td>${fmtDate(x.termin)}</td>
+      <td>${escapeHtml(x.odpowiedzialny) || "—"}</td>
+      <td>${x.status}</td>
+    </tr>`).join("") : `<tr><td colspan="8" style="text-align:center;color:#777;">Nie stwierdzono usterek.</td></tr>`;
+
+  const photosHtml = d.photos.length ? `
+    <div class="doc-photo-grid">
+      ${d.photos.map((p, i) => `
+        <div class="doc-photo-card">
+          <img src="${p.dataUrl}" alt="Zdjęcie ${i + 1} z kontroli">
+          <div class="cap">
+            <b>Zdjęcie ${i + 1}.</b> ${escapeHtml(p.opis) || "brak opisu"}<br>
+            Data wykonania: ${fmtDate(p.data)}
+          </div>
+        </div>`).join("")}
+    </div>` : `<p style="font-family:var(--font-ui);font-size:13px;color:#777;">Brak załączonych zdjęć.</p>`;
+
+  const toolbarHtml = mode === "new" ? `
+    <button class="btn btn-ghost" id="rtBack">← Wróć do edycji</button>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <button class="btn btn-add" id="rtSave">💾 Zapisz do rejestru</button>
+      <button class="btn btn-primary" id="rtPrint">🖨 Drukuj / zapisz jako PDF</button>
+      <button class="btn btn-ghost" id="rtNew">Nowy protokół</button>
+    </div>
+  ` : `
+    <button class="btn btn-ghost" id="rtBack">← Wróć do spisu kontroli</button>
+    <button class="btn btn-primary" id="rtPrint">🖨 Drukuj / zapisz jako PDF</button>
+  `;
+
+  el.innerHTML = `
+    <div class="protocol-toolbar no-print">${toolbarHtml}</div>
+
+    <div class="doc-page">
+      <div class="doc-eyebrow">Ochrona przeciwpożarowa obiektu</div>
+      <div class="doc-title">Protokół z kontroli / przeglądu<br>stanu ochrony przeciwpożarowej</div>
+      <div class="doc-sub">Wygenerowano na podstawie formularza online</div>
+
+      <div class="doc-meta">
+        <span><b>Protokół nr:</b> ${escapeHtml(d.protokolNr)}</span>
+        <span><b>Data kontroli:</b> ${fmtDate(d.dataKontroli)}</span>
+      </div>
+
+      <div class="doc-section-title">I. Dane identyfikacyjne obiektu</div>
+      <div class="doc-field"><b>Nazwa obiektu:</b> ${escapeHtml(d.nazwaObiektu)}</div>
+      <div class="doc-field"><b>Adres obiektu:</b> ${escapeHtml(d.adresObiektu) || "—"}</div>
+      <div class="doc-field"><b>Właściciel / zarządca obiektu:</b> ${escapeHtml(d.wlasciciel) || "—"}</div>
+
+      <div class="doc-section-title">II. Dane instalacji / systemu</div>
+      <div class="doc-field"><b>Typ i producent centrali:</b> ${escapeHtml(d.typCentrali) || "—"}</div>
+      <div class="doc-field"><b>Zmiany od ostatniego przeglądu:</b> ${escapeHtml(d.zmiany) || "—"}</div>
+
+      <div class="doc-section-title">III. Zakres kontroli i ocena stanu technicznego</div>
+      <table class="doc-table">
+        <thead><tr><th>Lp.</th><th>Element / instalacja</th><th>Stan</th><th>Uwagi</th></tr></thead>
+        <tbody>${zakresRows}</tbody>
+      </table>
+
+      <div class="doc-section-title">IV. Stwierdzone usterki i zalecenia</div>
+      <table class="doc-table">
+        <thead><tr><th>Lp.</th><th>Opis usterki</th><th>Lokalizacja</th><th>Zalecane działanie</th><th>Podstawa prawna</th><th>Termin</th><th>Odpowiedzialny</th><th>Status</th></tr></thead>
+        <tbody>${defectRowsHtml}</tbody>
+      </table>
+
+      <div class="doc-section-title">V. Wykonane naprawy i konserwacje podczas przeglądu</div>
+      <div class="doc-field">${escapeHtml(d.naprawy) || "……………………………………………………………………………………………"}</div>
+
+      <div class="doc-section-title">VI. Oświadczenie o stanie systemu / ograniczeniach</div>
+      <div class="doc-checkbox-line">☑ ${oswiadczenieLabel(d.oswiadczenie)}</div>
+      ${d.oswiadczenie === "ograniczenia" ? `<div class="doc-field"><b>Opis ograniczeń:</b> ${escapeHtml(d.ograniczeniaOpis) || "—"}</div>` : ""}
+      ${d.oswiadczenieOpis ? `<div class="doc-field"><b>Opis / uwagi:</b> ${escapeHtml(d.oswiadczenieOpis)}</div>` : ""}
+
+      <div class="doc-section-title">VII. Załączniki – zdjęcia z kontroli</div>
+      ${photosHtml}
+
+      <div class="doc-section-title">VIII. Podpisy</div>
+      <div class="doc-signrow-labels">
+        <div>Opracował</div>
+        <div>Zatwierdził</div>
+      </div>
+      <div class="doc-signrow">
+        <div class="doc-signbox">
+          <b>Osoba wykonująca przegląd</b>
+          Imię i nazwisko: ${escapeHtml(d.osobaImie)}<br>
+          ${escapeHtml(d.osobaFirma) || "—"}
+        </div>
+        <div class="doc-signbox">
+          <b>Właściciel / zarządca obiektu</b>
+          Imię i nazwisko: ……………………………………<br>
+          Data i podpis: ……………………………………
+        </div>
+      </div>
+
+      <div class="gen-footer">
+        Protokół wygenerowany automatycznie na podstawie formularza online.<br>
+        <b>Wygenerował:</b> ${escapeHtml(d.osobaImie)} &nbsp;|&nbsp; <b>Data i godzina generowania:</b> ${fmtDateTime(d.generatedAt)}<br>
+        Dokument wymaga podpisu właściciela / zarządcy obiektu celem zatwierdzenia.
+      </div>
+    </div>
+  `;
+
+  document.getElementById("rtBack").addEventListener("click", () => {
+    showView(mode === "new" ? "formView" : "registryView");
+  });
+  document.getElementById("rtPrint").addEventListener("click", () => window.print());
+  if (mode === "new") {
+    document.getElementById("rtNew").addEventListener("click", () => {
+      if (confirm("Rozpocząć nowy, pusty protokół? Bieżące dane zostaną utracone.")) {
+        location.reload();
+      }
+    });
+    document.getElementById("rtSave").addEventListener("click", (e) => saveCurrentToRegistry(d, e.target));
+  }
+}
+
+/* ==========================================================
+   Spis kontroli (rejestr)
+   ========================================================== */
+function renderRegistryView() {
+  const el = document.getElementById("registryView");
+  const list = loadRegistry();
+
+  el.innerHTML = `
+    <div class="registry-toolbar">
+      <h2>Spis kontroli</h2>
+      <div class="registry-search">
+        <select id="regFilter">
+          <option value="all">Wszystkie</option>
+          <option value="open">Otwarte</option>
+          <option value="done">Zrealizowane</option>
+        </select>
+      </div>
+    </div>
+    ${list.length ? `
+      <div class="table-wrap">
+        <table class="registry">
+          <thead>
+            <tr>
+              <th>Nr protokołu</th><th>Obiekt</th><th>Data kontroli</th>
+              <th>Zalecenia</th><th>Status</th><th>Rekontrole</th><th>Akcje</th>
+            </tr>
+          </thead>
+          <tbody id="registryBody">${list.map(registryRowHtml).join("")}</tbody>
+        </table>
+      </div>
+    ` : `<div class="registry-empty">Brak zapisanych protokołów. Wygeneruj protokół w zakładce „📝 Nowy protokół”, a następnie kliknij „💾 Zapisz do rejestru”.</div>`}
+  `;
+
+  wireRegistryActions();
+  const filter = document.getElementById("regFilter");
+  if (filter) filter.addEventListener("change", () => applyRegistryFilter(filter.value));
+}
+
+function registryRowHtml(r) {
+  const total = r.defects.length;
+  const closed = r.defects.filter(d => d.status === "zrealizowane").length;
+  const status = recordStatus(r);
+  const badge = status === "done" ? `<span class="badge badge-done">Zrealizowana</span>` : `<span class="badge badge-open">Otwarta</span>`;
+  const rekontroleCount = (r.rekontrole || []).length;
+  return `
+    <tr data-status="${status}" data-record="${r.id}">
+      <td>${escapeHtml(r.protokolNr)}</td>
+      <td>${escapeHtml(r.nazwaObiektu)}</td>
+      <td>${fmtDate(r.dataKontroli)}</td>
+      <td>${total ? `${closed}/${total} zamkniętych` : "brak zaleceń"}</td>
+      <td>${badge}</td>
+      <td>${rekontroleCount ? rekontroleCount + " ×" : "—"}</td>
+      <td>
+        <div class="registry-actions">
+          <button class="btn btn-ghost" data-action="view" data-id="${r.id}">Podgląd</button>
+          <button class="btn btn-add" data-action="recontrol" data-id="${r.id}">Rekontrola</button>
+          ${rekontroleCount ? `<button class="btn btn-ghost" data-action="history" data-id="${r.id}">Historia</button>` : ""}
+          <button class="btn btn-danger" data-action="delete" data-id="${r.id}">Usuń</button>
+        </div>
+      </td>
+    </tr>
+  `;
+}
+
+function wireRegistryActions() {
+  document.querySelectorAll("#registryView [data-action]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.getAttribute("data-id");
+      const action = btn.getAttribute("data-action");
+      if (action === "view") openRecordView(id);
+      if (action === "recontrol") openRecontrolView(id);
+      if (action === "delete") deleteRecord(id);
+      if (action === "history") toggleHistoryRow(id, btn);
+    });
+  });
+}
+
+function applyRegistryFilter(v) {
+  document.querySelectorAll("#registryBody tr[data-record]").forEach(tr => {
+    const s = tr.getAttribute("data-status");
+    tr.style.display = (v === "all" || v === s) ? "" : "none";
+  });
+}
+
+function deleteRecord(id) {
+  if (!confirm("Usunąć ten protokół z rejestru? Tej operacji nie można cofnąć.")) return;
+  const list = loadRegistry().filter(r => r.id !== id);
+  saveRegistryList(list);
+  renderRegistryView();
+}
+
+function toggleHistoryRow(id, btn) {
+  const existing = document.querySelector(`tr.history-row[data-for="${id}"]`);
+  if (existing) { existing.remove(); return; }
+  const list = loadRegistry();
+  const r = list.find(x => x.id === id);
+  if (!r) return;
+  const tr = btn.closest("tr");
+  const histTr = document.createElement("tr");
+  histTr.className = "history-row";
+  histTr.setAttribute("data-for", id);
+
+  const events = (r.rekontrole || []).map(rk => {
+    const rows = (rk.results || []).map(res => `
+      <tr>
+        <td>${escapeHtml(res.opis) || "—"}</td>
+        <td>${res.statusPrzed}</td>
+        <td>${res.statusPo}</td>
+        <td>${escapeHtml(res.komentarz) || "—"}</td>
+      </tr>
+    `).join("");
+    return `
+      <div class="history-event">
+        <div class="history-event-head">
+          ${fmtDate(rk.data)} — wykonał: ${escapeHtml(rk.wykonawca)} — zrealizowano ${rk.zamknieteTeraz}/${rk.total} zaleceń
+        </div>
+        <table class="history-table">
+          <thead><tr><th>Zalecenie</th><th>Status przed</th><th>Status po</th><th>Ustalenia z rekontroli</th></tr></thead>
+          <tbody>${rows || `<tr><td colspan="4" style="color:#888;">Brak zaleceń w tej rekontroli.</td></tr>`}</tbody>
+        </table>
+      </div>
+    `;
+  }).join("");
+
+  histTr.innerHTML = `<td colspan="7"><b>Historia rekontroli:</b>${events || "<div style='margin-top:6px;'>Brak.</div>"}</td>`;
+  tr.after(histTr);
+}
+
+function openRecordView(id) {
+  const list = loadRegistry();
+  const r = list.find(x => x.id === id);
+  if (!r) return;
+  renderDoc(r, { mode: "view" });
+  showView("protocolView");
+}
+
+/* ==========================================================
+   Rekontrola
+   ========================================================== */
+function openRecontrolView(id) {
+  const list = loadRegistry();
+  const r = list.find(x => x.id === id);
+  if (!r) return;
+  currentRecontrolId = id;
+  recontrolPhotos.reset();
+
+  const el = document.getElementById("recontrolView");
+  const defectsHtml = r.defects.length ? r.defects.map((d, i) => `
+    <tr>
+      <td class="lp">${i + 1}</td>
+      <td>${escapeHtml(d.opis) || "—"}</td>
+      <td>${fmtDate(d.termin)}</td>
+      <td>
+        <select class="status-select" data-rk-status="${d.id}">
+          ${DEFECT_STATUS_OPTIONS.map(s => `<option value="${s}" ${s === d.status ? "selected" : ""}>${s}</option>`).join("")}
+        </select>
+      </td>
+      <td><input type="text" data-rk-komentarz="${d.id}" placeholder="ustalenia z rekontroli"></td>
+    </tr>
+  `).join("") : `<tr><td colspan="5" style="text-align:center;color:#777;">Ten protokół nie zawiera zaleceń.</td></tr>`;
+
+  el.innerHTML = `
+    <div class="recontrol-header">
+      <b>Rekontrola protokołu ${escapeHtml(r.protokolNr)}</b> — ${escapeHtml(r.nazwaObiektu)}<br>
+      Data kontroli pierwotnej: ${fmtDate(r.dataKontroli)}
+    </div>
+
+    <section class="section">
+      <div class="section-head"><h2>Dane rekontroli</h2></div>
+      <div class="section-body">
+        <div class="field-grid">
+          <div class="field">
+            <label>Data rekontroli <span class="req">*</span></label>
+            <input type="date" id="rkData">
+          </div>
+          <div class="field">
+            <label>Osoba wykonująca rekontrolę <span class="req">*</span></label>
+            <input type="text" id="rkOsoba" value="Paweł Kikiela">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><h2>Zestawienie zaleceń</h2></div>
+      <div class="section-body">
+        <p class="section-hint">Zaznacz aktualny status każdego zalecenia i wpisz ustalenia z rekontroli.</p>
+        <div class="table-wrap">
+          <table class="grid">
+            <thead><tr><th style="width:34px;">Lp.</th><th>Opis usterki</th><th>Termin pierwotny</th><th>Status</th><th>Ustalenia z rekontroli</th></tr></thead>
+            <tbody>${defectsHtml}</tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><h2>Zdjęcia z rekontroli</h2></div>
+      <div class="section-body">
+        <p class="section-hint">Dokumentacja fotograficzna stanu po usunięciu usterek.</p>
+        <div class="upload-zone" id="rkUploadZone">
+          <input type="file" id="rkPhotoInput" accept="image/*" multiple>
+          <div class="upload-title">Kliknij, aby dodać zdjęcia, lub przeciągnij pliki tutaj</div>
+          <div class="upload-sub">Obsługiwane formaty: JPG, PNG · można dodać wiele zdjęć</div>
+        </div>
+        <p class="empty-note" id="rkPhotoEmpty">Nie dodano jeszcze żadnych zdjęć.</p>
+        <div class="photo-grid" id="rkPhotoGrid"></div>
+      </div>
+    </section>
+
+    <div class="generate-bar">
+      <div>
+        <div style="font-weight:600; font-size:14px; color:var(--navy-dark);">Gotowe do wygenerowania raportu porównawczego?</div>
+        <div class="msg">Zmiany statusów zaleceń zostaną zapisane w rejestrze kontroli.</div>
+        <div id="rkValidation"></div>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn btn-ghost" id="rkBack">← Wróć do spisu</button>
+        <button class="btn btn-primary" id="rkGenerate">Zapisz i generuj raport →</button>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("rkData").valueAsDate = new Date();
+  recontrolPhotos.wire();
+  document.getElementById("rkBack").addEventListener("click", () => showView("registryView"));
+  document.getElementById("rkGenerate").addEventListener("click", () => generateComparison(r));
+
+  showView("recontrolView");
+}
+
+function generateComparison(record) {
+  const dataRk = document.getElementById("rkData").value;
+  const osobaRk = document.getElementById("rkOsoba").value.trim();
+  const box = document.getElementById("rkValidation");
+  const errors = [];
+  if (!dataRk) errors.push("Podaj datę rekontroli.");
+  if (!osobaRk) errors.push("Podaj osobę wykonującą rekontrolę.");
+  if (errors.length) {
+    box.innerHTML = `<ul class="validation-list">${errors.map(e => `<li>${e}</li>`).join("")}</ul>`;
+    return;
+  }
+  box.innerHTML = "";
+
+  const results = record.defects.map(d => {
+    const statusSelect = document.querySelector(`[data-rk-status="${d.id}"]`);
+    const komentarzInput = document.querySelector(`[data-rk-komentarz="${d.id}"]`);
+    return {
+      defectId: d.id,
+      opis: d.opis,
+      terminPierwotny: d.termin,
+      statusPrzed: d.status,
+      statusPo: statusSelect ? statusSelect.value : d.status,
+      komentarz: komentarzInput ? komentarzInput.value.trim() : "",
+    };
+  });
+
+  const list = loadRegistry();
+  const idx = list.findIndex(x => x.id === record.id);
+  if (idx === -1) return;
+  results.forEach(res => {
+    const defect = list[idx].defects.find(d => d.id === res.defectId);
+    if (defect) {
+      defect.status = res.statusPo;
+      defect.rekontrolaKomentarz = res.komentarz;
+    }
+  });
+
+  const now = new Date();
+  const zamknieteTeraz = results.filter(r2 => r2.statusPo === "zrealizowane").length;
+  const rkEvent = {
+    id: generateId(),
+    data: dataRk,
+    wykonawca: osobaRk,
+    generatedAt: now.toISOString(),
+    results,
+    photos: recontrolPhotos.getItems(),
+    zamknieteTeraz,
+    total: results.length,
+  };
+  list[idx].rekontrole = list[idx].rekontrole || [];
+  list[idx].rekontrole.push(rkEvent);
+  saveRegistryList(list);
+
+  renderComparisonDoc(list[idx], rkEvent);
+  showView("comparisonView");
+}
+
+function statusBadgeClass(s) {
+  if (s === "zrealizowane") return "row-ok";
+  if (s === "otwarte") return "row-bad";
+  return "row-neutral";
+}
+
+function renderComparisonDoc(record, rk) {
+  const el = document.getElementById("comparisonView");
+
+  const rows = rk.results.length ? rk.results.map((r, i) => `
+    <tr class="${statusBadgeClass(r.statusPo)}">
+      <td>${i + 1}</td>
+      <td>${escapeHtml(r.opis) || "—"}</td>
+      <td>${fmtDate(r.terminPierwotny)}</td>
+      <td>${r.statusPrzed}</td>
+      <td>${r.statusPo}</td>
+      <td>${escapeHtml(r.komentarz) || "—"}</td>
+    </tr>`).join("") : `<tr><td colspan="6" style="text-align:center;color:#777;">Brak zaleceń do weryfikacji.</td></tr>`;
+
+  const photosHtml = rk.photos.length ? `
+    <div class="doc-photo-grid">
+      ${rk.photos.map((p, i) => `
+        <div class="doc-photo-card">
+          <img src="${p.dataUrl}" alt="Zdjęcie ${i + 1} z rekontroli">
+          <div class="cap"><b>Zdjęcie ${i + 1}.</b> ${escapeHtml(p.opis) || "brak opisu"}<br>Data: ${fmtDate(p.data)}</div>
+        </div>`).join("")}
+    </div>` : `<p style="font-family:var(--font-ui);font-size:13px;color:#777;">Brak załączonych zdjęć.</p>`;
+
+  const zrealizowane = rk.results.filter(r => r.statusPo === "zrealizowane").length;
+  const wTrakcie = rk.results.filter(r => r.statusPo === "w trakcie").length;
+  const otwarte = rk.results.filter(r => r.statusPo === "otwarte").length;
+
+  el.innerHTML = `
+    <div class="protocol-toolbar no-print">
+      <button class="btn btn-ghost" id="cmpBack">← Wróć do spisu kontroli</button>
+      <button class="btn btn-primary" id="cmpPrint">🖨 Drukuj / zapisz jako PDF</button>
+    </div>
+
+    <div class="doc-page">
+      <div class="doc-eyebrow">Ochrona przeciwpożarowa obiektu</div>
+      <div class="doc-title">Raport porównawczy z rekontroli</div>
+      <div class="doc-sub">Weryfikacja realizacji zaleceń z protokołu pierwotnego</div>
+
+      <div class="doc-meta">
+        <span><b>Protokół pierwotny nr:</b> ${escapeHtml(record.protokolNr)}</span>
+        <span><b>Data rekontroli:</b> ${fmtDate(rk.data)}</span>
+      </div>
+
+      <div class="doc-field"><b>Obiekt:</b> ${escapeHtml(record.nazwaObiektu)}</div>
+      <div class="doc-field"><b>Adres:</b> ${escapeHtml(record.adresObiektu) || "—"}</div>
+      <div class="doc-field"><b>Data kontroli pierwotnej:</b> ${fmtDate(record.dataKontroli)}</div>
+
+      <div class="doc-section-title">Zestawienie porównawcze zaleceń</div>
+      <table class="doc-table">
+        <thead><tr><th>Lp.</th><th>Opis usterki</th><th>Termin pierwotny</th><th>Status przed</th><th>Status po rekontroli</th><th>Ustalenia</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+
+      <div class="doc-section-title">Podsumowanie rekontroli</div>
+      <div class="doc-field">Zrealizowane: <b>${zrealizowane}</b> &nbsp;|&nbsp; W trakcie: <b>${wTrakcie}</b> &nbsp;|&nbsp; Nadal otwarte: <b>${otwarte}</b></div>
+
+      <div class="doc-section-title">Załączniki – zdjęcia z rekontroli</div>
+      ${photosHtml}
+
+      <div class="gen-footer">
+        Raport wygenerowany automatycznie na podstawie formularza online.<br>
+        <b>Wygenerował:</b> ${escapeHtml(rk.wykonawca)} &nbsp;|&nbsp; <b>Data i godzina generowania:</b> ${fmtDateTime(rk.generatedAt)}<br>
+        Raport ma charakter informacyjny — nie wymaga podpisu ani zatwierdzenia.
+      </div>
+    </div>
+  `;
+
+  document.getElementById("cmpBack").addEventListener("click", () => showView("registryView"));
+  document.getElementById("cmpPrint").addEventListener("click", () => window.print());
+}
+
+</script>
+</body>
+</html>
