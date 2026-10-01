@@ -450,6 +450,10 @@ table.doc-table tr.row-neutral td{ background:#EDEFF1; }
   <nav class="tabnav no-print">
     <button class="tab-btn active" data-tab="formView" id="navNew">📝 Nowy protokół</button>
     <button class="tab-btn" data-tab="registryView" id="navRegistry">📋 Spis kontroli</button>
+    <span style="flex:1"></span>
+    <button class="tab-btn" id="navExport" title="Zapisz wszystkie protokoły do pliku kopii zapasowej (.json)">⬇️ Eksportuj rejestr</button>
+    <button class="tab-btn" id="navImport" title="Wczytaj protokoły z pliku kopii zapasowej (.json)">⬆️ Importuj rejestr</button>
+    <input type="file" id="importFile" accept=".json,application/json" style="display:none">
   </nav>
 
   <!-- ============ FORMULARZ ============ -->
@@ -848,7 +852,69 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("navNew").addEventListener("click", () => showView("formView"));
   document.getElementById("navRegistry").addEventListener("click", () => showView("registryView"));
+  document.getElementById("navExport").addEventListener("click", exportRegistry);
+  document.getElementById("navImport").addEventListener("click", () => {
+    const f = document.getElementById("importFile"); f.value = ""; f.click();
+  });
+  document.getElementById("importFile").addEventListener("change", e => {
+    if (e.target.files && e.target.files[0]) importRegistry(e.target.files[0]);
+  });
 });
+
+/* ==========================================================
+   Kopia zapasowa rejestru (eksport / import JSON)
+   ========================================================== */
+function exportRegistry() {
+  const list = loadRegistry();
+  if (!list.length) { alert("Rejestr jest pusty – nie ma czego eksportować."); return; }
+  const payload = {
+    format: "ppoz_protocols_backup", version: 1,
+    exportedAt: new Date().toISOString(), count: list.length, protocols: list
+  };
+  const blob = new Blob([JSON.stringify(payload)], { type: "application/json" });
+  const d = new Date(), pad = n => String(n).padStart(2, "0");
+  const stamp = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}`;
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `rejestr_protokolow_ppoz_${stamp}.json`;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+
+function importRegistry(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    let data;
+    try { data = JSON.parse(reader.result); }
+    catch (e) { alert("Nie można odczytać pliku – to nie jest prawidłowy plik JSON."); return; }
+    if (data && data.format && data.format !== "ppoz_protocols_backup") {
+      if (!confirm("Ten plik wygląda na kopię z innej aplikacji (nie protokołów p.poż.). Czy na pewno chcesz go zaimportować?")) return;
+    }
+    const imported = Array.isArray(data) ? data : (data && Array.isArray(data.protocols) ? data.protocols : null);
+    if (!imported) { alert("Plik nie zawiera listy protokołów."); return; }
+    const valid = imported.filter(r => r && typeof r === "object");
+    if (!valid.length) { alert("Plik nie zawiera żadnych protokołów."); return; }
+
+    const current = loadRegistry();
+    const byId = new Map(current.map(r => [r.id, r]));
+    let added = 0, replaced = 0;
+    valid.forEach(r => { if (!r.id) r.id = generateId(); if (byId.has(r.id)) replaced++; else added++; });
+
+    let msg = `Plik zawiera ${valid.length} protokoł(ów).\n` +
+              `• nowych: ${added}\n• już istniejących (zostaną zastąpione wersją z pliku): ${replaced}\n`;
+    if (current.length) msg += `\nObecnie w rejestrze: ${current.length}. Protokoły, których nie ma w pliku, pozostaną bez zmian.`;
+    msg += "\n\nKontynuować import?";
+    if (!confirm(msg)) return;
+
+    valid.forEach(r => byId.set(r.id, r));
+    if (saveRegistryList(Array.from(byId.values()))) {
+      alert(`Import zakończony. W rejestrze jest teraz ${byId.size} protokoł(ów).`);
+      showView("registryView");
+    }
+  };
+  reader.onerror = () => alert("Błąd odczytu pliku.");
+  reader.readAsText(file);
+}
 
 /* ==========================================================
    Nawigacja między widokami
@@ -1283,8 +1349,42 @@ function saveCurrentToRegistry(d, btn) {
     btn.textContent = "✓ Zapisano do rejestru";
     btn.disabled = true;
     btn.classList.remove("btn-add");
+    promptBackup("Protokół zapisany do rejestru");
   }
 }
+/* ==========================================================
+   Propozycja kopii zapasowej po zapisie
+   ========================================================== */
+function promptBackup(title) {
+  const old = document.getElementById("backupPrompt");
+  if (old) old.remove();
+  const count = loadRegistry().length;
+  const wrap = document.createElement("div");
+  wrap.id = "backupPrompt";
+  wrap.className = "no-print";
+  wrap.style.cssText = "position:fixed;inset:0;background:rgba(15,25,40,.45);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px;";
+  wrap.innerHTML = `
+    <div role="dialog" aria-modal="true" style="background:#fff;color:#1b2430;max-width:440px;width:100%;border-radius:12px;padding:22px 22px 18px;box-shadow:0 12px 40px rgba(0,0,0,.25);font-family:inherit;">
+      <div style="font-size:17px;font-weight:700;margin-bottom:8px;">✓ ${title}</div>
+      <div style="font-size:14px;line-height:1.5;margin-bottom:18px;">
+        Dane są zapisane tylko w tej przeglądarce. Pobierz aktualną kopię całego rejestru
+        (${count} protokoł(ów)) i zachowaj ją w bezpiecznym miejscu, np. w OneDrive lub na Dysku Google.
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;">
+        <button type="button" id="bpLater" style="padding:9px 16px;border-radius:8px;border:1px solid #c9d1db;background:#fff;color:#1b2430;font:inherit;cursor:pointer;">Później</button>
+        <button type="button" id="bpExport" style="padding:9px 16px;border-radius:8px;border:0;background:var(--navy, #1f3a5f);color:#fff;font:inherit;font-weight:600;cursor:pointer;">⬇️ Pobierz kopię</button>
+      </div>
+    </div>`;
+  document.body.appendChild(wrap);
+  const close = () => { wrap.remove(); document.removeEventListener("keydown", onKey); };
+  const onKey = e => { if (e.key === "Escape") close(); };
+  document.addEventListener("keydown", onKey);
+  wrap.addEventListener("click", e => { if (e.target === wrap) close(); });
+  wrap.querySelector("#bpLater").addEventListener("click", close);
+  wrap.querySelector("#bpExport").addEventListener("click", () => { exportRegistry(); close(); });
+  wrap.querySelector("#bpExport").focus();
+}
+
 
 function renderDoc(d, opts = {}) {
   const mode = opts.mode || "new";
@@ -1792,10 +1892,11 @@ function generateComparison(record) {
   };
   list[idx].rekontrole = list[idx].rekontrole || [];
   list[idx].rekontrole.push(rkEvent);
-  saveRegistryList(list);
+  const rkOk = saveRegistryList(list);
 
   renderComparisonDoc(list[idx], rkEvent);
   showView("comparisonView");
+  if (rkOk) promptBackup("Rekontrola zapisana");
 }
 
 function statusBadgeClass(s) {
